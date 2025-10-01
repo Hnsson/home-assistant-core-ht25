@@ -107,12 +107,13 @@ docker run --rm \
 If you want to run the sonar-scanner connected to sonarcloud:
 ```bash
 docker run --rm \
-  -v /home/hnsson/repos/home-assistant-core-ht25:/usr/src \
+  -v /home/emhs21/home-assistant-core-ht25:/usr/src \
+  -w /usr/src \
   -e SONAR_HOST_URL="https://sonarcloud.io" \
   -e SONAR_TOKEN="785f52ddfc7aff8c64db2442729ef3af72eb90ee" \
   sonarsource/sonar-scanner-cli \
   -Dsonar.projectKey=Hnsson_home-assistant-core-ht25 \
-  -Dsonar.organization=hnsson
+  -Dsonar.organization=hnsson \
   -Dsonar.branch.name=emil-duplicate-blocks
 ```
 
