@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sensorpush_ble import SensorUpdate
+from sensorpush_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
@@ -27,7 +27,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SensorPush BLE sensors."""
     coordinator = entry.runtime_data
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = PassiveBluetoothDataProcessor(
+        lambda update: sensor_update_to_bluetooth_data_update(
+            update, DeviceClass, Units
+        )
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             SensorPushBluetoothSensorEntity, async_add_entities

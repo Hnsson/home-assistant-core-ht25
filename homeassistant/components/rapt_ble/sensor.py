@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from rapt_ble import SensorUpdate
+from rapt_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -30,7 +30,11 @@ async def async_setup_entry(
     coordinator: PassiveBluetoothProcessorCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
-    processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
+    processor = PassiveBluetoothDataProcessor(
+        lambda update: sensor_update_to_bluetooth_data_update(
+            update, DeviceClass, Units
+        )
+    )
     entry.async_on_unload(
         processor.async_add_entities_listener(
             RAPTPillBluetoothSensorEntity, async_add_entities

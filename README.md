@@ -113,6 +113,7 @@ docker run --rm \
   sonarsource/sonar-scanner-cli \
   -Dsonar.projectKey=Hnsson_home-assistant-core-ht25 \
   -Dsonar.organization=hnsson
+  -Dsonar.branch.name=emil-duplicate-blocks
 ```
 
 And change the project directory to the location of the directory, and also change the sonar token to what
