@@ -174,11 +174,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             and len(discovery_info.ip_addresses) > 1
         ):
             existing_host = existing_config_entry.data[CONF_HOST]
-            if existing_host != self.host:
-                if existing_host in [
-                    str(ip_address) for ip_address in discovery_info.ip_addresses
-                ]:
-                    self.host = existing_host
+            if existing_host != self.host and existing_host in [
+                str(ip) for ip in discovery_info.ip_addresses
+            ]:
+                self.host = existing_host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
