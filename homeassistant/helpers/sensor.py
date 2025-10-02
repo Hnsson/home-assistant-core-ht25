@@ -19,28 +19,11 @@ if TYPE_CHECKING:
         SensorDeviceInfo,
     )
 
-
-def sensor_device_info_to_hass_device_info(
-    sensor_device_info: SensorDeviceInfo,
-) -> DeviceInfo:
-    """Convert a sensor_state_data sensor device info to a HA device info."""
-    device_info = DeviceInfo()
-    if sensor_device_info.name is not None:
-        device_info[const.ATTR_NAME] = sensor_device_info.name
-    if sensor_device_info.manufacturer is not None:
-        device_info[const.ATTR_MANUFACTURER] = sensor_device_info.manufacturer
-    if sensor_device_info.model is not None:
-        device_info[const.ATTR_MODEL] = sensor_device_info.model
-    return device_info
-
-
 # HELPER FUNCTIONS FOR SENSOR SETUP:
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
 )
-
-# from homeassistant.components.bluetooth import DeviceKey, SensorUpdate
 
 
 from homeassistant.components.sensor import (
@@ -57,6 +40,20 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfPressure,
 )
+
+
+def sensor_device_info_to_hass_device_info(
+    sensor_device_info: SensorDeviceInfo,
+) -> DeviceInfo:
+    """Convert a sensor_state_data sensor device info to a HA device info."""
+    device_info = DeviceInfo()
+    if sensor_device_info.name is not None:
+        device_info[const.ATTR_NAME] = sensor_device_info.name
+    if sensor_device_info.manufacturer is not None:
+        device_info[const.ATTR_MANUFACTURER] = sensor_device_info.manufacturer
+    if sensor_device_info.model is not None:
+        device_info[const.ATTR_MODEL] = sensor_device_info.model
+    return device_info
 
 
 def build_sensor_descriptions(DeviceClass, Units):
