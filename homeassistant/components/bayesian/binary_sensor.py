@@ -79,8 +79,7 @@ def _above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
             raise vol.Invalid(
                 "For bayesian numeric state at least one of 'above' or 'below' must be specified."
             )
-        if above is not None and below is not None:
-            if above > below:
+        if above is not None and below is not None and above > below:
                 _LOGGER.error(
                     "For bayesian numeric state 'above' (%s) must be less than 'below' (%s)",
                     above,
