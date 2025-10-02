@@ -188,6 +188,8 @@ AREA_ID = "area_id"
 FEATURE = "feature"
 STRATEGY = "strategy"
 
+STATISTICS_UPDATED = "statistics updated"
+
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
 
@@ -2707,9 +2709,7 @@ async def websocket_subscribe_controller_statistics(
 
     controller = driver.controller
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [
-        controller.on("statistics updated", forward_stats)
-    ]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [controller.on(STATISTICS_UPDATED, forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID])
@@ -2717,7 +2717,7 @@ async def websocket_subscribe_controller_statistics(
         websocket_api.event_message(
             msg[ID],
             {
-                "event": "statistics updated",
+                "event": STATISTICS_UPDATED,
                 "source": "controller",
                 **_get_controller_statistics_dict(controller.statistics),
             },
@@ -2801,7 +2801,7 @@ async def websocket_subscribe_node_statistics(
             )
         )
 
-    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on("statistics updated", forward_stats)]
+    msg[DATA_UNSUBSCRIBE] = unsubs = [node.on(STATISTICS_UPDATED, forward_stats)]
     connection.subscriptions[msg["id"]] = async_cleanup
 
     connection.send_result(msg[ID])
@@ -2809,7 +2809,7 @@ async def websocket_subscribe_node_statistics(
         websocket_api.event_message(
             msg[ID],
             {
-                "event": "statistics updated",
+                "event": STATISTICS_UPDATED,
                 "source": "node",
                 "nodeId": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
