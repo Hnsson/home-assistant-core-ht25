@@ -75,7 +75,6 @@ from .const import (
     EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
-    HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
     MANUFACTURER,
     MAX_MANUFACTURER_LENGTH,
@@ -331,49 +330,93 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
-        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self.hass = hass
+        self.driver = driver
+        self.entity_id = entity_id
+        self.category = category
         self.config = config or {}
-        if device_id:
-            self.device_id: str | None = device_id
-            serial_number = device_id
-            domain = None
-        else:
-            self.device_id = None
-            serial_number = entity_id
-            domain = split_entity_id(entity_id)[0].replace("_", " ")
+        self.device_id = device_id
+        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self._subscriptions: list[CALLBACK_TYPE] = []
 
+        serial_number, domain = self._resolve_identity(entity_id, device_id)
+        manufacturer = self._resolve_manufacturer(domain)
+        model = self._resolve_model(domain)
+        sw_version = self._resolve_sw_version()
+        hw_version = self._resolve_hw_version()
+
+        self._setup_info_service(
+            manufacturer, model, serial_number, sw_version, hw_version
+        )
+
+        if not device_id:
+            self._setup_battery_service()
+
+    # identify /config resolvers
+    def _resolve_identity(
+        self, entity_id: str, device_id: str | None
+    ) -> tuple[str, str | None]:
+        """Resolve serial number and domain for the accessory"""
+        if device_id:
+            return device_id, None
+        domain = split_entity_id(entity_id)[0].replace("_", " ")
+        return entity_id, domain
+
+    def _resolve_manufacturer(self, domain: str | None) -> str:
+        """Resolve manafacturer from config or domain, avoid 'None' strings"""
         if self.config.get(ATTR_MANUFACTURER) is not None:
-            manufacturer = str(self.config[ATTR_MANUFACTURER])
-        elif self.config.get(ATTR_INTEGRATION) is not None:
-            manufacturer = self.config[ATTR_INTEGRATION].replace("_", " ").title()
-        elif domain:
-            manufacturer = f"{MANUFACTURER} {domain}".title()
-        else:
-            manufacturer = MANUFACTURER
+            return str(self.config[ATTR_MANUFACTURER])
+        if self.config.get(ATTR_INTEGRATION) is not None:
+            return self.config[ATTR_INTEGRATION].replace("_", " ").title()
+        if domain:
+            return f"{MANUFACTURER} {domain}".title()
+        return MANUFACTURER
+
+    def _resolve_model(self, domain: str | None) -> str:
+        """Resolve model from config or domain, avoid 'None' strings"""
         if self.config.get(ATTR_MODEL) is not None:
-            model = str(self.config[ATTR_MODEL])
-        elif domain:
-            model = domain.title()
-        else:
-            model = MANUFACTURER
+            return str(self.config[ATTR_MODEL])
+        if domain:
+            return domain.title()
+        return MANUFACTURER
+
+    def _resolve_sw_version(self) -> str:
+        """Resolve software version, preserving original guard behavior"""
         sw_version = None
         if self.config.get(ATTR_SW_VERSION) is not None:
             sw_version = format_version(self.config[ATTR_SW_VERSION])
         if sw_version is None:
             sw_version = format_version(__version__)
             assert sw_version is not None
-        hw_version = None
-        if self.config.get(ATTR_HW_VERSION) is not None:
-            hw_version = format_version(self.config[ATTR_HW_VERSION])
+        return sw_version
 
+    def _resolve_hw_version(self) -> str | None:
+        if self.config.get(ATTR_HW_VERSION) is not None:
+            return format_version(self.config[ATTR_HW_VERSION])
+        return None
+
+    # Services setup
+
+    def _setup_info_service(
+        self,
+        manufacturer: str,
+        model: str,
+        serial_number: str,
+        sw_version: str,
+        hw_version: str | None,
+    ) -> None:
         self.set_info_service(
-            manufacturer=manufacturer[:MAX_MANUFACTURER_LENGTH],
-            model=model[:MAX_MODEL_LENGTH],
-            serial_number=serial_number[:MAX_SERIAL_LENGTH],
-            firmware_revision=sw_version[:MAX_VERSION_LENGTH],
+            manufacturer=(manufacturer or "")[:MAX_MANUFACTURER_LENGTH],
+            model=(model or "")[:MAX_MODEL_LENGTH],
+            serial_number=(serial_number or "")[:MAX_SERIAL_LENGTH],
+            firmware_revision=(sw_version or "")[:MAX_VERSION_LENGTH],
         )
+
+        serv_info = self.get_service(SERV_ACCESSORY_INFO)
+        if serv_info is None:
+            serv_info = self.add_preload_service(SERV_ACCESSORY_INFO)
+
         if hw_version:
-            serv_info = self.get_service(SERV_ACCESSORY_INFO)
             char = self.driver.loader.get_char(CHAR_HARDWARE_REVISION)
             serv_info.add_characteristic(char)
             serv_info.configure_char(
@@ -382,17 +425,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             char.broker = self
             self.iid_manager.assign(char)
 
-        self.category = category
-        self.entity_id = entity_id
-        self.hass = hass
-        self._subscriptions: list[CALLBACK_TYPE] = []
-
-        if device_id:
-            return
-
+    def _setup_battery_service(self) -> None:
+        """Add battery service if available"""
         self._char_battery = None
         self._char_charging = None
         self._char_low_battery = None
+
         self.linked_battery_sensor = self.config.get(CONF_LINKED_BATTERY_SENSOR)
         self.linked_battery_charging_sensor = self.config.get(
             CONF_LINKED_BATTERY_CHARGING_SENSOR
@@ -401,49 +439,65 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             CONF_LOW_BATTERY_THRESHOLD, DEFAULT_LOW_BATTERY_THRESHOLD
         )
 
-        """Add battery service if available"""
         state = self.hass.states.get(self.entity_id)
         self._update_available_from_state(state)
         assert state is not None
+
+        battery_found = self._resolve_battery_level(state)
+        if not battery_found:
+            return
+
+        self._setup_battery_characteristics()
+
+    def _resolve_battery_level(self, state) -> Any:
+        """Find battery info from entity or linked sensor"""
         entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
 
         if self.linked_battery_sensor:
-            state = self.hass.states.get(self.linked_battery_sensor)
-            if state is not None:
-                battery_found = state.state
-            else:
-                _LOGGER.warning(
-                    "%s: Battery sensor state missing: %s",
-                    self.entity_id,
-                    self.linked_battery_sensor,
-                )
-                self.linked_battery_sensor = None
+            sensor_state = self.hass.states.get(self.linked_battery_sensor)
+            if sensor_state is not None:
+                return sensor_state.state
+            _LOGGER.warning(
+                "%s: Battery sensor state missing: %s",
+                self.entity_id,
+                self.linked_battery_sensor,
+            )
+            self.linked_battery_sensor = None
+        return battery_found
 
-        if not battery_found:
-            return
-
+    def _setup_battery_characteristics(self) -> None:
+        """Configure battery related characteristics"""
         _LOGGER.debug("%s: Found battery level", self.entity_id)
+        serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
 
+        # Initialize with default values
+        level = 0
+        low_val = 0
+        charging_val = 2  # Default to "not chargeable"
+
+        # Check for charging sensor availability (but don't set value yet)
         if self.linked_battery_charging_sensor:
-            state = self.hass.states.get(self.linked_battery_charging_sensor)
-            if state is None:
-                self.linked_battery_charging_sensor = None
+            charging_state = self.hass.states.get(self.linked_battery_charging_sensor)
+            if charging_state is None:
                 _LOGGER.warning(
                     "%s: Battery charging binary_sensor state missing: %s",
                     self.entity_id,
                     self.linked_battery_charging_sensor,
                 )
+                self.linked_battery_charging_sensor = None
             else:
                 _LOGGER.debug("%s: Found battery charging", self.entity_id)
 
-        serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
-        self._char_battery = serv_battery.configure_char(CHAR_BATTERY_LEVEL, value=0)
-        self._char_charging = serv_battery.configure_char(
-            CHAR_CHARGING_STATE, value=HK_NOT_CHARGABLE
+        # Configure characteristics with default values
+        self._char_battery = serv_battery.configure_char(
+            CHAR_BATTERY_LEVEL, value=level
         )
         self._char_low_battery = serv_battery.configure_char(
-            CHAR_STATUS_LOW_BATTERY, value=0
+            CHAR_STATUS_LOW_BATTERY, value=low_val
+        )
+        self._char_charging = serv_battery.configure_char(
+            CHAR_CHARGING_STATE, value=charging_val
         )
 
     def _update_available_from_state(self, new_state: State | None) -> None:
