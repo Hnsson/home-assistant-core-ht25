@@ -10,6 +10,141 @@ sudo sysctl -w vm.max_map_count=262144
 ```
 
 
+# (Newest) How to run
+
+1. Core:
+Get Python 3.13:
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev
+```
+
+(re)create venv:
+```bash
+rm -rf venv
+python3.13 -m venv venv
+source venv/bin/activate
+```
+
+Run home assistant setup:
+```bash
+./script/setup
+```
+
+Then install the requirements:
+
+```bash
+pip install -r requirements_all.txt
+```
+
+Run it:
+```bash
+hass -c config
+```
+
+
+2. Frontend
+Get Python 3.13:
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev
+```
+
+(re)create venv:
+```bash
+rm -rf venv
+python3.13 -m venv venv
+source venv/bin/activate
+```
+
+Run home assistant setup:
+```bash
+./script/setup
+./script/bootstrap
+```
+
+Run it:
+```bash
+./script/develop
+```
+
+# If you want to run tests localhost
+Get Python 3.13:
+```bash
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.13 python3.13-venv python3.13-dev
+```
+
+(re)create venv:
+```bash
+rm -rf venv
+python3.13 -m venv venv
+source venv/bin/activate
+```
+
+
+Run home assistant setup:
+```bash
+./script/setup
+```
+
+Then install the requirements:
+
+```bash
+pip install -r requirements_all.txt
+```
+
+And then you can run the tests with:
+
+```bash
+pytest tests/
+```
+
+# If you want to run tests
+If you only want to run tests you can do the following:
+
+```bash
+docker build -f Dockerfile.dev -t ha-dev:latest .
+```
+
+```bash
+docker run -it --rm \
+    -v $(pwd):/workspaces \
+    -p 8123:8123 \
+    ha-dev:latest \
+    /bin/bash
+```
+
+Then inside the container run:
+
+```bash
+script/setup
+```
+
+Then activate the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Then install the requirements:
+
+```bash
+pip install -r requirements_all.txt
+```
+
+And then you can run the tests with:
+
+```bash
+pytest tests/
+```
+
+# If you want persistent
+Using docker compose you have the containers up and down as you wish and is saved across runs.
+
 Setup the Sonarqube and it's corresponding database with the compose file `./sonarqube-compose.yml`:
 ```bash
 docker compose -f sonarqube-compose.yml up
@@ -27,6 +162,19 @@ docker run --rm \
   -e SONAR_HOST_URL=http://sonarqube:9000 \
   -e SONAR_TOKEN=<SONAR_TOKEN> \
   sonarsource/sonar-scanner-cli
+```
+
+If you want to run the sonar-scanner connected to sonarcloud:
+```bash
+docker run --rm \
+  -v /home/emhs21/home-assistant-core-ht25:/usr/src \
+  -w /usr/src \
+  -e SONAR_HOST_URL="https://sonarcloud.io" \
+  -e SONAR_TOKEN="785f52ddfc7aff8c64db2442729ef3af72eb90ee" \
+  sonarsource/sonar-scanner-cli \
+  -Dsonar.projectKey=Hnsson_home-assistant-core-ht25 \
+  -Dsonar.organization=hnsson \
+  -Dsonar.branch.name=emil-duplicate-blocks
 ```
 
 And change the project directory to the location of the directory, and also change the sonar token to what
