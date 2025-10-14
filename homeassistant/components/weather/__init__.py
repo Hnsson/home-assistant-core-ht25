@@ -55,6 +55,8 @@ from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (  # noqa: F401
+    ATTR_WEATHER_ALERT,
+    ATTR_WEATHER_ALERT_SEVERITY,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -128,6 +130,8 @@ ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 ATTR_FORECAST_UV_INDEX: Final = "uv_index"
+ATTR_FORECAST_SUNSET: Final = "sunset"
+ATTR_FORECAST_SUNRISE: Final = "sunrise"
 
 ROUNDING_PRECISION = 2
 
@@ -182,6 +186,10 @@ class Forecast(TypedDict, total=False):
     for backwards compatibility.
     """
 
+    alert: str | None
+    alert_severity: str | None
+    sunset: str | None
+    sunrise: str | None
     condition: str | None
     datetime: Required[str]
     humidity: float | None
@@ -259,6 +267,10 @@ class PostInit(metaclass=PostInitMeta):
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
+    "alert",
+    "alert_serverity",
+    "sunset",
+    "sunrise",
     "native_apparent_temperature",
     "native_temperature",
     "native_temperature_unit",
@@ -284,6 +296,10 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     """ABC for weather data."""
 
     entity_description: WeatherEntityDescription
+    _attr_alert: str | None = None
+    _attr_alert_severity: str | None = None
+    _attr_sunset: str | None = None
+    _attr_sunrise: str | None = None
     _attr_condition: str | None = None
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
@@ -405,6 +421,26 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
             return weather_option_pressure_unit
 
         return self._default_pressure_unit
+
+    @cached_property
+    def alert(self) -> str | None:
+        """Return the alert."""
+        return self._attr_alert
+    
+    @cached_property
+    def alert_severity(self) -> str | None:
+        """Return the alert severity."""
+        return self._attr_alert_severity
+    
+    @cached_property
+    def sunset(self) -> str | None:
+        """Return the alert."""
+        return self._attr_sunset
+    
+    @cached_property
+    def sunrise(self) -> str | None:
+        """Return the alert."""
+        return self._attr_sunrise
 
     @cached_property
     def humidity(self) -> float | None:
@@ -609,6 +645,22 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 data[ATTR_WEATHER_DEW_POINT] = dew_point
 
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
+
+        if (alert := self.alert) is not None:
+            print("ALLERST: ", alert)
+            data[ATTR_WEATHER_ALERT] = alert        
+        
+        if (alert_severity := self.alert_severity) is not None:
+            print("ALLERST: ", alert_severity)
+            data[ATTR_WEATHER_ALERT_SEVERITY] = alert_severity
+
+        if (sunset := self.sunset) is not None:
+            print("ALLERST: ", sunset)
+            data[ATTR_FORECAST_SUNSET] = sunset
+
+        if (sunrise := self.sunrise) is not None:
+            print("ALLERST: ", sunrise)
+            data[ATTR_FORECAST_SUNRISE] = sunrise
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)

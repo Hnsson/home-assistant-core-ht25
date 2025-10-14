@@ -6,6 +6,10 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.weather import (
+    ATTR_WEATHER_ALERT,
+    ATTR_WEATHER_ALERT_SEVERITY,
+    ATTR_FORECAST_SUNSET,
+    ATTR_FORECAST_SUNRISE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -149,8 +153,36 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
 
         if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
             condition = ATTR_CONDITION_CLEAR_NIGHT
-
+        _LOGGER.info(f"Condition: {condition}")
         return format_condition(condition)
+
+    @property
+    def alert(self) -> str | None:
+        """Return the alert."""
+        return self.coordinator.data.alert.get(
+            ATTR_MAP[ATTR_WEATHER_ALERT]
+        )
+
+    @property
+    def alert_severity(self) -> str | None:
+        """Return the alert severity."""
+        return self.coordinator.data.alert.get(
+            ATTR_MAP[ATTR_WEATHER_ALERT_SEVERITY]
+        )
+
+    @property
+    def sunset(self) -> str | None:
+        """Return the alert."""
+        return self.coordinator.data.sun_data.get(
+            ATTR_MAP[ATTR_FORECAST_SUNSET]
+        )
+
+    @property
+    def sunrise(self) -> str | None:
+        """Return the alert."""
+        return self.coordinator.data.sun_data.get(
+            ATTR_MAP[ATTR_FORECAST_SUNRISE]
+        )
 
     @property
     def native_temperature(self) -> float | None:

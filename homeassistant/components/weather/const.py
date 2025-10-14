@@ -35,6 +35,8 @@ class WeatherEntityFeature(IntFlag):
     FORECAST_TWICE_DAILY = 4
 
 
+ATTR_WEATHER_ALERT = "alert",
+ATTR_WEATHER_ALERT_SEVERITY = "alert_severity"
 ATTR_WEATHER_HUMIDITY = "humidity"
 ATTR_WEATHER_OZONE = "ozone"
 ATTR_WEATHER_DEW_POINT = "dew_point"
