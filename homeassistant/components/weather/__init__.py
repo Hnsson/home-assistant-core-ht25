@@ -426,17 +426,17 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     def alert(self) -> str | None:
         """Return the alert."""
         return self._attr_alert
-    
+
     @cached_property
     def alert_severity(self) -> str | None:
         """Return the alert severity."""
         return self._attr_alert_severity
-    
+
     @cached_property
     def sunset(self) -> str | None:
         """Return the alert."""
         return self._attr_sunset
-    
+
     @cached_property
     def sunrise(self) -> str | None:
         """Return the alert."""
@@ -648,8 +648,8 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
 
         if (alert := self.alert) is not None:
             print("ALLERST: ", alert)
-            data[ATTR_WEATHER_ALERT] = alert        
-        
+            data[ATTR_WEATHER_ALERT] = alert
+
         if (alert_severity := self.alert_severity) is not None:
             print("ALLERST: ", alert_severity)
             data[ATTR_WEATHER_ALERT_SEVERITY] = alert_severity

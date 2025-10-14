@@ -159,30 +159,22 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     @property
     def alert(self) -> str | None:
         """Return the alert."""
-        return self.coordinator.data.alert.get(
-            ATTR_MAP[ATTR_WEATHER_ALERT]
-        )
+        return self.coordinator.data.alert.get(ATTR_MAP[ATTR_WEATHER_ALERT])
 
     @property
     def alert_severity(self) -> str | None:
         """Return the alert severity."""
-        return self.coordinator.data.alert.get(
-            ATTR_MAP[ATTR_WEATHER_ALERT_SEVERITY]
-        )
+        return self.coordinator.data.alert.get(ATTR_MAP[ATTR_WEATHER_ALERT_SEVERITY])
 
     @property
     def sunset(self) -> str | None:
         """Return the alert."""
-        return self.coordinator.data.sun_data.get(
-            ATTR_MAP[ATTR_FORECAST_SUNSET]
-        )
+        return self.coordinator.data.sun_data.get(FORECAST_MAP[ATTR_FORECAST_SUNSET])
 
     @property
     def sunrise(self) -> str | None:
         """Return the alert."""
-        return self.coordinator.data.sun_data.get(
-            ATTR_MAP[ATTR_FORECAST_SUNRISE]
-        )
+        return self.coordinator.data.sun_data.get(FORECAST_MAP[ATTR_FORECAST_SUNRISE])
 
     @property
     def native_temperature(self) -> float | None:
