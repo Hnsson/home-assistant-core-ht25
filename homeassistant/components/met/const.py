@@ -49,6 +49,79 @@ CONF_TRACK_HOME = "track_home"
 DEFAULT_HOME_LATITUDE = 52.3731339
 DEFAULT_HOME_LONGITUDE = 4.8903147
 
+ALERT_RULES = [
+    {
+        "id": "storm_warning",
+        "conditions": {
+            "wind_speed": lambda w: w > 24.5,
+        },
+        "message": "Storm warning! High winds above 24.5 m/s detected.",
+        "severity": "high",
+    },
+    {
+        "id": "wind_gust_warning",
+        "conditions": {
+            "wind_gust": lambda w: w > 30,
+        },
+        "message": "Extreme wind gusts detected! Stay indoors.",
+        "severity": "critical",
+    },
+    {
+        "id": "heavy_rain",
+        "conditions": {
+            "precipitation": lambda p: p > 15,
+        },
+        "message": "Heavy rainfall expected. Stay safe!",
+        "severity": "medium",
+    },
+    {
+        "id": "rainstorm",
+        "conditions": {
+            "temperature": lambda t: t > 0,
+            "precipitation": lambda p: p >= 20,
+            "wind_speed": lambda w: w >= 10,
+        },
+        "message": "Rainstorm alert! Heavy rain and strong winds expected.",
+        "severity": "medium",
+    },
+    {
+        "id": "flood_warning",
+        "conditions": {
+            "precipitation": lambda p: p > 30,
+            "humidity": lambda h: h > 85,
+        },
+        "message": "Flood warning! Intense rainfall and high humidity detected.",
+        "severity": "critical",
+    },
+    {
+        "id": "heavy_snow",
+        "conditions": {
+            "temperature": lambda t: t <= 0,
+            "precipitation": lambda p: p >= 5,
+        },
+        "message": "Heavy snow expected. Drive carefully!",
+        "severity": "medium",
+    },
+    {
+        "id": "uv_alert",
+        "conditions": {
+            "uv_index": lambda uv: uv >= 8,
+        },
+        "message": "High UV index! Protect your skin.",
+        "severity": "medium",
+    },
+    {
+        "id": "snowstorm_warning",
+        "conditions": {
+            "temperature": lambda t: t <= 0,
+            "precipitation": lambda p: p >= 8,
+            "wind_speed": lambda w: w >= 10,
+        },
+        "message": "Snowstorm expected. Strong winds and heavy snowfall.",
+        "severity": "high",
+    },
+]
+
 ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_{HOME_LOCATION_NAME}"
 
 CONDITIONS_MAP = {
