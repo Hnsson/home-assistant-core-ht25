@@ -647,19 +647,15 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
         data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 
         if (alert := self.alert) is not None:
-            print("ALLERST: ", alert)
             data[ATTR_WEATHER_ALERT] = alert
 
         if (alert_severity := self.alert_severity) is not None:
-            print("ALLERST: ", alert_severity)
             data[ATTR_WEATHER_ALERT_SEVERITY] = alert_severity
 
         if (sunset := self.sunset) is not None:
-            print("ALLERST: ", sunset)
             data[ATTR_FORECAST_SUNSET] = sunset
 
         if (sunrise := self.sunrise) is not None:
-            print("ALLERST: ", sunrise)
             data[ATTR_FORECAST_SUNRISE] = sunrise
 
         if (humidity := self.humidity) is not None:

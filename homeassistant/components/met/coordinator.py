@@ -8,6 +8,11 @@ import logging
 from random import randrange
 from typing import Any, Self
 
+from homeassistant.components.weather import ATTR_FORECAST_SUNRISE, ATTR_FORECAST_SUNSET
+from homeassistant.components.weather.const import (
+    ATTR_WEATHER_ALERT,
+    ATTR_WEATHER_ALERT_SEVERITY,
+)
 import metno
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TRACK_HOME, DOMAIN
+from .const import CONF_TRACK_HOME, DOMAIN, ALERT_RULES, SEVERITY_ORDER
 
 # Dedicated Home Assistant endpoint - do not change!
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
@@ -46,6 +51,8 @@ class MetWeatherData:
         self._config = config
         self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
+        self.alert: dict[str, str] = {}
+        self.sun_data: dict[str, str] = {}
         self.daily_forecast: list[dict] = []
         self.hourly_forecast: list[dict] = []
         self._coordinates: dict[str, str] | None = None
@@ -75,6 +82,38 @@ class MetWeatherData:
         )
         return True
 
+    def evaluate_alert(
+        self, weather_data: dict, daily_forecast: list[dict]
+    ) -> dict[str, str]:
+        """From all available current weather metrics, create alert messages."""
+        precipitation = [
+            day.get("precipitation", 0)
+            for day in daily_forecast
+            if isinstance(day.get("precipitation"), (int, float))
+        ]
+        avg_precipitation = (
+            sum(precipitation) / len(precipitation) if precipitation else 0
+        )
+
+        combined_data = {**weather_data, "precipitation": avg_precipitation}
+
+        matched_rules = [
+            rule
+            for rule in ALERT_RULES
+            if all(
+                metric in combined_data and condition(combined_data[metric])
+                for metric, condition in rule["conditions"].items()
+            )
+        ]
+
+        if not matched_rules:
+            return {"message": "No alerts", "severity": "None"}
+
+        most_severe = max(
+            matched_rules, key=lambda r: SEVERITY_ORDER.get(r["severity"], 0)
+        )
+        return {"message": most_severe["message"], "severity": most_severe["severity"]}
+
     async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
@@ -84,6 +123,14 @@ class MetWeatherData:
         time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
+
+        alert_result = self.evaluate_alert(
+            self.current_weather_data, self.daily_forecast
+        )
+        self.alert = {
+            ATTR_WEATHER_ALERT: alert_result["message"],
+            ATTR_WEATHER_ALERT_SEVERITY: alert_result["severity"],
+        }
         return self
 
 

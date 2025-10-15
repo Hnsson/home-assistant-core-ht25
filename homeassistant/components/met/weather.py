@@ -153,6 +153,7 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
 
         if condition == ATTR_CONDITION_SUNNY and not sun.is_up(self.hass):
             condition = ATTR_CONDITION_CLEAR_NIGHT
+
         return format_condition(condition)
 
     @property

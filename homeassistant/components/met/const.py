@@ -49,6 +49,7 @@ CONF_TRACK_HOME = "track_home"
 DEFAULT_HOME_LATITUDE = 52.3731339
 DEFAULT_HOME_LONGITUDE = 4.8903147
 
+SEVERITY_ORDER = {"critical": 3, "high": 2, "medium": 1, "low": 0}
 ALERT_RULES = [
     {
         "id": "storm_warning",
