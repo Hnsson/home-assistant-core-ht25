@@ -8,10 +8,11 @@ import logging
 from random import randrange
 from typing import Any, Self
 
-from homeassistant.components.weather import ATTR_FORECAST_SUNRISE, ATTR_FORECAST_SUNSET
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_ALERT,
     ATTR_WEATHER_ALERT_SEVERITY,
+    ATTR_WEATHER_SUNSET,
+    ATTR_WEATHER_SUNRISE
 )
 import metno
 

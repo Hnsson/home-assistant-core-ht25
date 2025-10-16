@@ -57,6 +57,8 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from .const import (  # noqa: F401
     ATTR_WEATHER_ALERT,
     ATTR_WEATHER_ALERT_SEVERITY,
+    ATTR_WEATHER_SUNRISE,
+    ATTR_WEATHER_SUNSET,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -130,8 +132,6 @@ ATTR_FORECAST_NATIVE_DEW_POINT: Final = "native_dew_point"
 ATTR_FORECAST_DEW_POINT: Final = "dew_point"
 ATTR_FORECAST_CLOUD_COVERAGE: Final = "cloud_coverage"
 ATTR_FORECAST_UV_INDEX: Final = "uv_index"
-ATTR_FORECAST_SUNSET: Final = "sunset"
-ATTR_FORECAST_SUNRISE: Final = "sunrise"
 
 ROUNDING_PRECISION = 2
 
@@ -653,10 +653,10 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
             data[ATTR_WEATHER_ALERT_SEVERITY] = alert_severity
 
         if (sunset := self.sunset) is not None:
-            data[ATTR_FORECAST_SUNSET] = sunset
+            data[ATTR_WEATHER_SUNSET] = sunset
 
         if (sunrise := self.sunrise) is not None:
-            data[ATTR_FORECAST_SUNRISE] = sunrise
+            data[ATTR_WEATHER_SUNRISE] = sunrise
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)

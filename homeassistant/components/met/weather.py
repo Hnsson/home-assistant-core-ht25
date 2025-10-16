@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.weather import (
     ATTR_WEATHER_ALERT,
     ATTR_WEATHER_ALERT_SEVERITY,
-    ATTR_FORECAST_SUNSET,
-    ATTR_FORECAST_SUNRISE,
+    ATTR_WEATHER_SUNSET,
+    ATTR_WEATHER_SUNRISE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_TIME,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -102,6 +102,7 @@ def format_condition(condition: str) -> str:
     for key, value in CONDITIONS_MAP.items():
         if condition in value:
             return key
+
     return condition
 
 
@@ -169,12 +170,12 @@ class MetWeather(SingleCoordinatorWeatherEntity[MetDataUpdateCoordinator]):
     @property
     def sunset(self) -> str | None:
         """Return the alert."""
-        return self.coordinator.data.sun_data.get(FORECAST_MAP[ATTR_FORECAST_SUNSET])
+        return self.coordinator.data.sun_data.get(ATTR_MAP[ATTR_WEATHER_SUNSET])
 
     @property
     def sunrise(self) -> str | None:
         """Return the alert."""
-        return self.coordinator.data.sun_data.get(FORECAST_MAP[ATTR_FORECAST_SUNRISE])
+        return self.coordinator.data.sun_data.get(ATTR_MAP[ATTR_WEATHER_SUNRISE])
 
     @property
     def native_temperature(self) -> float | None:
