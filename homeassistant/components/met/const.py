@@ -83,7 +83,7 @@ ALERT_RULES = [
             "wind_speed": lambda w: w >= 10,
         },
         "message": "Rainstorm alert! Heavy rain and strong winds expected.",
-        "severity": "medium",
+        "severity": "high",
     },
     {
         "id": "flood_warning",
