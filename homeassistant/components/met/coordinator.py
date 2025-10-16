@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+import datetime
 from datetime import timedelta
 import logging
 from random import randrange
 from typing import Any, Self
 
+import metno
+
 from homeassistant.components.weather.const import (
     ATTR_WEATHER_ALERT,
     ATTR_WEATHER_ALERT_SEVERITY,
+    ATTR_WEATHER_SUNRISE,
     ATTR_WEATHER_SUNSET,
-    ATTR_WEATHER_SUNRISE
 )
-import metno
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -29,10 +30,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TRACK_HOME, DOMAIN, ALERT_RULES, SEVERITY_ORDER
+from .const import ALERT_RULES, CONF_TRACK_HOME, DOMAIN, SEVERITY_ORDER
 
 # Dedicated Home Assistant endpoint - do not change!
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
+SUNRISE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/sunrise/3.0/sun"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +55,9 @@ class MetWeatherData:
         self._weather_data: metno.MetWeatherData
         self.current_weather_data: dict = {}
         self.alert: dict[str, str] = {}
-        self.sun_data: dict[str, str] = {}
         self.daily_forecast: list[dict] = []
         self.hourly_forecast: list[dict] = []
+        self.sun_data: dict = {}
         self._coordinates: dict[str, str] | None = None
 
     def set_coordinates(self) -> bool:
@@ -132,7 +134,57 @@ class MetWeatherData:
             ATTR_WEATHER_ALERT: alert_result["message"],
             ATTR_WEATHER_ALERT_SEVERITY: alert_result["severity"],
         }
+        self.sun_data = await self.fetch_sun_data(time_zone)
         return self
+
+    async def fetch_sun_data(
+        self, time_zone: datetime.tzinfo
+    ) -> dict[str, datetime.time]:
+        """Fetch sunrise and sunset data from Met.no API."""
+        if not self._coordinates:
+            return {}
+        try:
+            session = async_get_clientsession(self.hass)
+            now = dt_util.now(time_zone)
+            date_str = now.strftime("%Y-%m-%d")
+            utc_offset = now.strftime("%z")
+            if utc_offset:
+                offset = f"{utc_offset[:3]}:{utc_offset[3:]}"
+            else:
+                offset = "+00:00"
+            params = {
+                "lat": self._coordinates["lat"],
+                "lon": self._coordinates["lon"],
+                "date": date_str,
+                "offset": offset,
+            }
+            async with session.get(SUNRISE_URL, params=params) as response:
+                if response.status != 200:
+                    _LOGGER.warning(
+                        "Error fetching sunrise data: HTTP %s", response.status
+                    )
+                    return {}
+
+                data = await response.json()
+                return self._parse_sun_data(data)
+
+        except Exception as err:
+            _LOGGER.error("Error fetching sunrise data: %s", err)
+            return {}
+
+    def _parse_sun_data(self, data: dict) -> dict[str, datetime.time]:
+        """Parse sunrise and sunset from API response."""
+        sun_data = {}
+        props = data.get("properties", {})
+
+        for key in [ATTR_WEATHER_SUNRISE, ATTR_WEATHER_SUNSET]:
+            if props.get(key):
+                time_str = props[key].get("time")
+                if time_str:
+                    dt = dt_util.parse_datetime(time_str)
+                    if dt:
+                        sun_data[key] = dt.time()
+        return sun_data
 
 
 class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
