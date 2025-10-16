@@ -38,7 +38,63 @@ SUNRISE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/sunrise/3.0/sun"
 
 _LOGGER = logging.getLogger(__name__)
 
-type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
+# --------------------------------------------------------------------
+# MOCK SETTINGS
+# Toggle mock data injection (True = use mock values)
+USE_MOCK = False
+
+USE_MOCK_FORECAST = False
+
+# Only these keys will be overridden when USE_MOCK is True
+
+# Current weather mock values
+MOCK_VALUES: dict[str, Any] = {
+    "temperature": 999,  # °C
+    "templow": 0,  # optional if needed
+    "pressure": 999,  # hPa
+    "humidity": 999,  # %
+    "wind_speed": 999,  # km/h
+    "wind_bearing": 999,  # degrees
+    "wind_gust": 999,  # km/h
+    "dew_point": 999,  # °C
+    "uv_index": 999,  # UV index
+    "condition": "mocked_weather",  # e.g., sunny, cloudy
+    "precipitation": 999,  # mm
+    "precipitation_probability": 999,  # %
+}
+
+# Daily forecast mock values
+MOCK_FORECAST_DAILY: dict[str, Any] = {
+    "temperature": 777,
+    "templow": 0,  # optional if needed
+    "pressure": 777,
+    "humidity": 777,
+    "wind_speed": 777,
+    "wind_bearing": 777,
+    "wind_gust": 777,
+    "dew_point": 777,
+    "uv_index": 777,
+    "condition": "mocked_daily",
+    "precipitation": 777,
+    "precipitation_probability": 777,
+}
+
+# Hourly forecast mock values
+MOCK_FORECAST_HOURLY: dict[str, Any] = {
+    "temperature": 888,
+    "templow": 0,  # optional
+    "pressure": 888,
+    "humidity": 888,
+    "wind_speed": 888,
+    "wind_bearing": 888,
+    "wind_gust": 888,
+    "dew_point": 888,
+    "uv_index": 888,
+    "condition": "mocked_hourly",
+    "precipitation": 888,
+    "precipitation_probability": 888,
+}
+type MetWeatherConfigEntry = ConfigEntry["MetDataUpdateCoordinator"]
 
 
 class CannotConnect(HomeAssistantError):
@@ -122,11 +178,39 @@ class MetWeatherData:
         resp = await self._weather_data.fetching_data()
         if not resp:
             raise CannotConnect
+
+        # Get real data
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
 
+        # Inject mock data (override or add missing keys)
+        if USE_MOCK:
+            _LOGGER.warning("Using mock weather data override: %s", MOCK_VALUES)
+            for key, mock_val in MOCK_VALUES.items():
+                self.current_weather_data[key] = (
+                    mock_val  # Add missing keys with mock values
+                )
+
+        # Inject mock daily forecast
+        if USE_MOCK_FORECAST:
+            _LOGGER.warning(
+                "Using mock daily forecast override: %s", MOCK_FORECAST_DAILY
+            )
+            for day in self.daily_forecast:
+                for key, mock_val in MOCK_FORECAST_DAILY.items():
+                    day[key] = mock_val  # Add missing keys with mock values
+
+        # Inject mock hourly forecast
+        if USE_MOCK_FORECAST:
+            _LOGGER.warning(
+                "Using mock hourly forecast override: %s", MOCK_FORECAST_HOURLY
+            )
+            for hour in self.hourly_forecast:
+                for key, mock_val in MOCK_FORECAST_HOURLY.items():
+                    hour[key] = mock_val  # Add missing keys with mock values
+        # Continue with normal alert logic
         alert_result = self.evaluate_alert(
             self.current_weather_data, self.daily_forecast
         )
