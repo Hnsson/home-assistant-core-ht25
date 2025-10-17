@@ -1,50 +1,51 @@
+"""Mock data for Met.no integration."""
+
 from typing import Any
-# Only these keys will be overridden when USE_MOCK is True
 
-# Current weather mock values
+# Current weather mock values to trigger ALERT_RULES
 MOCK_VALUES: dict[str, Any] = {
-    "temperature": 999,  # °C
-    "templow": 0,  # optional if needed
-    "pressure": 999,  # hPa
-    "humidity": 999,  # %
-    "wind_speed": 999,  # km/h
-    "wind_bearing": 999,  # degrees
-    "wind_gust": 999,  # km/h
-    "dew_point": 999,  # °C
-    "uv_index": 999,  # UV index
-    "condition": "mocked_weather",  # e.g., sunny, cloudy
-    "precipitation": 999,  # mm
-    "precipitation_probability": 999,  # %
+    # "temperature": -1,  # Triggers heavy_snow and snowstorm_warning
+    # "templow": -5,  # Optional, used for additional testing
+    # "pressure": 1000,  # Default value
+    # "humidity": 90,  # Triggers flood_warning
+    # "wind_speed": 25,  # Triggers storm_warning and snowstorm_warning
+    # "wind_bearing": 180,  # Default value
+    # "wind_gust": 35,  # Triggers wind_gust_warning
+    # "dew_point": -2,  # Default value
+    # "uv_index": 8,  # Triggers uv_alert
+    # "condition": "mocked_weather",  # Default value
+    # "precipitation": 35,  # Triggers flood_warning and rainstorm
+    # "precipitation_probability": 100,  # Default value
 }
 
-# Daily forecast mock values
+# Daily forecast mock values to trigger ALERT_RULES
 MOCK_FORECAST_DAILY: dict[str, Any] = {
-    "temperature": 777,
-    "templow": 0,  # optional if needed
-    "pressure": 777,
-    "humidity": 777,
-    "wind_speed": 777,
-    "wind_bearing": 777,
-    "wind_gust": 777,
-    "dew_point": 777,
-    "uv_index": 777,
-    "condition": "mocked_daily",
-    "precipitation": 777,
-    "precipitation_probability": 777,
+    # "temperature": -1,  # Triggers heavy_snow and snowstorm_warning
+    # "templow": -5,  # Optional, used for additional testing
+    # "pressure": 1000,  # Default value
+    # "humidity": 90,  # Triggers flood_warning
+    # "wind_speed": 25,  # Triggers storm_warning and snowstorm_warning
+    # "wind_bearing": 180,  # Default value
+    # "wind_gust": 35,  # Triggers wind_gust_warning
+    # "dew_point": -2,  # Default value
+    # "uv_index": 8,  # Triggers uv_alert
+    # "condition": "mocked_daily",  # Default value
+    # "precipitation": 35,  # Triggers flood_warning and rainstorm
+    # "precipitation_probability": 100,  # Default value
 }
 
-# Hourly forecast mock values
+# Hourly forecast mock values to trigger ALERT_RULES
 MOCK_FORECAST_HOURLY: dict[str, Any] = {
-    "temperature": 888,
-    "templow": 0,  # optional
-    "pressure": 888,
-    "humidity": 888,
-    "wind_speed": 888,
-    "wind_bearing": 888,
-    "wind_gust": 888,
-    "dew_point": 888,
-    "uv_index": 888,
-    "condition": "mocked_hourly",
-    "precipitation": 888,
-    "precipitation_probability": 888,
+    # "temperature": -1,  # Triggers heavy_snow and snowstorm_warning
+    # "templow": -5,  # Optional, used for additional testing
+    # "pressure": 1000,  # Default value
+    # "humidity": 90,  # Triggers flood_warning
+    # "wind_speed": 25,  # Triggers storm_warning and snowstorm_warning
+    # "wind_bearing": 180,  # Default value
+    # "wind_gust": 35,  # Triggers wind_gust_warning
+    # "dew_point": -2,  # Default value
+    # "uv_index": 8,  # Triggers uv_alert
+    # "condition": "mocked_hourly",  # Default value
+    # "precipitation": 35,  # Triggers flood_warning and rainstorm
+    # "precipitation_probability": 100,  # Default value
 }
