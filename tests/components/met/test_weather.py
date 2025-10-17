@@ -1,5 +1,6 @@
 """Test Met weather entity."""
 
+import datetime
 from homeassistant import config_entries
 from homeassistant.components.met import DOMAIN
 from homeassistant.components.weather import (
@@ -71,7 +72,9 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
     assert state.attributes[ATTR_WEATHER_DEW_POINT] == 12.1
     assert state.attributes[ATTR_WEATHER_UV_INDEX] == 1.1
     assert state.attributes[ATTR_WEATHER_ALERT] == "test alert"
-    assert state.attributes[ ATTR_WEATHER_ALERT_SEVERITY] == "low" 
+    assert state.attributes[ ATTR_WEATHER_ALERT_SEVERITY] == "low"
+
+    print(state.attributes)
 
 async def test_weather_alerts_storm(hass: HomeAssistant, mock_weather_alert_storm) -> None:
     """Test storm alert"""
@@ -236,3 +239,20 @@ async def test_remove_hourly_entity(
     await hass.async_block_till_done()
     assert hass.states.async_entity_ids("weather") == ["weather.forecast_somewhere"]
     assert list(entity_registry.entities.keys()) == ["weather.forecast_somewhere"]
+
+def test_parse_sun_data():
+    """Test _parse_sun_data with a real API-like response."""
+    from homeassistant.components.met.coordinator import MetWeatherData
+
+    api_response = {
+        "properties": {
+            "sunrise": {"time": "2025-10-17T07:33+02:00", "azimuth": 105.65},
+            "sunset": {"time": "2025-10-17T17:51+02:00", "azimuth": 254.07},
+        }
+    }
+
+    instance = MetWeatherData(None, None)  
+    parsed = instance._parse_sun_data(api_response)
+
+    assert parsed["sunrise"] == datetime.time(7, 33)
+    assert parsed["sunset"] == datetime.time(17, 51)
