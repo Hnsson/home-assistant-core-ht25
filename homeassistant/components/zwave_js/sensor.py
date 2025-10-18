@@ -93,7 +93,13 @@ from .helpers import get_device_info, get_valueless_base_unique_id
 from .migrate import async_migrate_statistics_sensors
 from .models import ZwaveJSConfigEntry
 
+# Constants
 PARALLEL_UPDATES = 0
+
+ERR_REFRESH_VALUE = (
+    "There is no value to refresh for this entity so the zwave_js.refresh_value"
+    " service won't work for it"
+)
 
 
 # These descriptions should have a non None unit of measurement.
@@ -940,10 +946,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
         # We log an error instead of raising an exception because this service call occurs
         # in a separate task since it is called via the dispatcher and we don't want to
         # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
+        LOGGER.error(ERR_REFRESH_VALUE)
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1003,10 +1006,7 @@ class ZWaveControllerStatusSensor(SensorEntity):
         # We log an error instead of raising an exception because this service call occurs
         # in a separate task since it is called via the dispatcher and we don't want to
         # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
+        LOGGER.error(ERR_REFRESH_VALUE)
 
     @callback
     def _status_changed(self, _: dict) -> None:
@@ -1074,10 +1074,7 @@ class ZWaveStatisticsSensor(SensorEntity):
         # We log an error instead of raising an exception because this service call occurs
         # in a separate task since it is called via the dispatcher and we don't want to
         # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
+        LOGGER.error(ERR_REFRESH_VALUE)
 
     @callback
     def _statistics_updated(self, event_data: dict) -> None:

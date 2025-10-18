@@ -328,7 +328,19 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
     if not isinstance(values, dict):
         raise vol.Invalid("expected a dictionary")
 
-    entities = {}
+    entities: dict[str, dict] = {}
+
+    schema_map = {
+        "camera": CAMERA_SCHEMA,
+        "lock": LOCK_SCHEMA,
+        "switch": SWITCH_TYPE_SCHEMA,
+        "humidifier": HUMIDIFIER_SCHEMA,
+        "cover": COVER_SCHEMA,
+        "fan": FAN_SCHEMA,
+        "sensor": SENSOR_SCHEMA,
+        "valve": VALVE_SCHEMA,
+    }
+
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
         domain, _ = split_entity_id(entity)
@@ -340,45 +352,31 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
-            config = FEATURE_SCHEMA(config)
-            feature_list = {}
-            for feature in config[CONF_FEATURE_LIST]:
-                params = MEDIA_PLAYER_SCHEMA(feature)
-                key = params.pop(CONF_FEATURE)
-                if key in feature_list:
-                    raise vol.Invalid(f"A feature can be added only once for {entity}")
-                feature_list[key] = params
-            config[CONF_FEATURE_LIST] = feature_list
-
-        elif domain == "camera":
-            config = CAMERA_SCHEMA(config)
-
-        elif domain == "lock":
-            config = LOCK_SCHEMA(config)
-
-        elif domain == "switch":
-            config = SWITCH_TYPE_SCHEMA(config)
-
-        elif domain == "humidifier":
-            config = HUMIDIFIER_SCHEMA(config)
-
-        elif domain == "cover":
-            config = COVER_SCHEMA(config)
-
-        elif domain == "fan":
-            config = FAN_SCHEMA(config)
-
-        elif domain == "sensor":
-            config = SENSOR_SCHEMA(config)
-
-        elif domain == "valve":
-            config = VALVE_SCHEMA(config)
+            config = _validate_media_player_config(entity, config)
 
         else:
-            config = BASIC_INFO_SCHEMA(config)
+            schema = schema_map.get(domain, BASIC_INFO_SCHEMA)
+            config = schema(config)
 
         entities[entity] = config
+
     return entities
+
+
+def _validate_media_player_config(entity: str, config: dict) -> dict:
+    """Special handling for media_player domain config."""
+    config = FEATURE_SCHEMA(config)
+    feature_list: dict[str, dict] = {}
+
+    for feature in config[CONF_FEATURE_LIST]:
+        params = MEDIA_PLAYER_SCHEMA(feature)
+        key = params.pop(CONF_FEATURE)
+        if key in feature_list:
+            raise vol.Invalid(f"A feature can be added only once for {entity}")
+        feature_list[key] = params
+
+    config[CONF_FEATURE_LIST] = feature_list
+    return config
 
 
 def get_media_player_features(state: State) -> list[str]:
