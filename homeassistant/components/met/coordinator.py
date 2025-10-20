@@ -9,6 +9,7 @@ import logging
 from random import randrange
 from typing import Any, Self
 
+from homeassistant.helpers.template import combine
 import metno
 
 from .mock_data import MOCK_VALUES, MOCK_FORECAST_DAILY, MOCK_FORECAST_HOURLY
@@ -120,10 +121,14 @@ class MetWeatherData:
         if not matched_rules:
             return {"message": "No alerts", "severity": "None"}
 
-        most_severe = max(
-            matched_rules, key=lambda r: SEVERITY_ORDER.get(r["severity"], 0)
+        most_relevant = max(
+            matched_rules,
+            key=lambda r: (SEVERITY_ORDER.get(r["severity"], 0), len(r["conditions"])),
         )
-        return {"message": most_severe["message"], "severity": most_severe["severity"]}
+        return {
+            "message": most_relevant["message"],
+            "severity": most_relevant["severity"],
+        }
 
     async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
