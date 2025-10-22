@@ -381,22 +381,6 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
     return entities
 
 
-def _validate_media_player_config(entity: str, config: dict) -> dict:
-    """Special handling for media_player domain config."""
-    config = FEATURE_SCHEMA(config)
-    feature_list: dict[str, dict] = {}
-
-    for feature in config[CONF_FEATURE_LIST]:
-        params = MEDIA_PLAYER_SCHEMA(feature)
-        key = params.pop(CONF_FEATURE)
-        if key in feature_list:
-            raise vol.Invalid(f"A feature can be added only once for {entity}")
-        feature_list[key] = params
-
-    config[CONF_FEATURE_LIST] = feature_list
-    return config
-
-
 def get_media_player_features(state: State) -> list[str]:
     """Determine features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
