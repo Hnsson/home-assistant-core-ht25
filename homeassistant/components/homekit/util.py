@@ -332,7 +332,11 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
         domain, _ = split_entity_id(entity)
-@@ -340,45 +352,31 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
+
+        if not isinstance(config, dict):
+            raise vol.Invalid(f"The configuration for {entity} must be a dictionary.")
+
+        if domain == "alarm_control_panel":
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.const.DOMAIN:
