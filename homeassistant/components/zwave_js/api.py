@@ -144,6 +144,9 @@ CLIENT_SIDE_AUTH = "clientSideAuth"
 # constants for inclusion
 INCLUSION_STRATEGY = "inclusion_strategy"
 
+# event constants
+NODE_FOUND = "node found"
+
 INCLUSION_STRATEGY_NOT_SMART_START: dict[
     int,
     Literal[
@@ -822,7 +825,7 @@ async def websocket_add_node(
         }
         connection.send_message(
             websocket_api.event_message(
-                msg[ID], {"event": "node found", "node": node_details}
+                msg[ID], {"event": NODE_FOUND, "node": node_details}
             )
         )
 
@@ -855,7 +858,7 @@ async def websocket_add_node(
         controller.on("inclusion stopped", forward_event),
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
-        controller.on("node found", node_found),
+        controller.on(NODE_FOUND, node_found),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
@@ -1554,7 +1557,7 @@ async def websocket_replace_failed_node(
         }
         connection.send_message(
             websocket_api.event_message(
-                msg[ID], {"event": "node found", "node": node_details}
+                msg[ID], {"event": NODE_FOUND, "node": node_details}
             )
         )
 
@@ -1614,7 +1617,7 @@ async def websocket_replace_failed_node(
         controller.on("validate dsk and enter pin", forward_dsk),
         controller.on("grant security classes", forward_requested_grant),
         controller.on("node removed", node_removed),
-        controller.on("node found", node_found),
+        controller.on(NODE_FOUND, node_found),
         controller.on("node added", node_added),
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device_registered
