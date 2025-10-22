@@ -5,7 +5,7 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
@@ -20,35 +20,6 @@ from . import (
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"
-
-
-def _match_humidifier_entity(
-    intent_obj: intent.Intent,
-    slots: dict,
-) -> tuple[State, dict]:
-    """Match humidifier entity and prepare service data.
-
-    Returns:
-        Tuple of (matched state, service_data dict)
-    """
-    hass = intent_obj.hass
-
-    match_constraints = intent.MatchTargetsConstraints(
-        name=slots["name"]["value"],
-        domains=[DOMAIN],
-        assistant=intent_obj.assistant,
-    )
-    match_result = intent.async_match_targets(hass, match_constraints)
-
-    if not match_result.is_match:
-        raise intent.MatchFailedError(
-            result=match_result, constraints=match_constraints
-        )
-
-    state = match_result.states[0]
-    service_data = {ATTR_ENTITY_ID: state.entity_id}
-
-    return state, service_data
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
