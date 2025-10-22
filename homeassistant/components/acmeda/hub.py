@@ -38,7 +38,7 @@ class PulseHub:
         """Return the host of this hub."""
         return self.config_entry.data["host"]  # type: ignore[no-any-return]
 
-    async def async_setup(self, tries: int = 0) -> bool:
+    async def async_setup(self) -> bool:
         """Set up a hub based on host parameter."""
         self.api = hub = aiopulse.Hub(self.host)
 
