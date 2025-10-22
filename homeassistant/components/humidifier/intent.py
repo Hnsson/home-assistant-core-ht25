@@ -43,7 +43,21 @@ class HumidityHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state, service_data = _match_humidifier_entity(intent_obj, slots)
+
+        match_constraints = intent.MatchTargetsConstraints(
+            name=slots["name"]["value"],
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        state = match_result.states[0]
+        service_data = {ATTR_ENTITY_ID: state.entity_id}
+
         humidity = slots["humidity"]["value"]
 
         if state.state == STATE_OFF:
@@ -84,7 +98,19 @@ class SetModeHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        state, service_data = _match_humidifier_entity(intent_obj, slots)
+        match_constraints = intent.MatchTargetsConstraints(
+            name=slots["name"]["value"],
+            domains=[DOMAIN],
+            assistant=intent_obj.assistant,
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        state = match_result.states[0]
+        service_data = {ATTR_ENTITY_ID: state.entity_id}
 
         intent.async_test_feature(state, HumidifierEntityFeature.MODES, "modes")
         mode = slots["mode"]["value"]
