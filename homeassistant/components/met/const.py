@@ -11,6 +11,8 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
+    ATTR_WEATHER_SUNSET,
+    ATTR_WEATHER_SUNRISE,
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
@@ -23,6 +25,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
+    ATTR_WEATHER_ALERT,
+    ATTR_WEATHER_ALERT_SEVERITY,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
     ATTR_WEATHER_HUMIDITY,
@@ -44,6 +48,80 @@ CONF_TRACK_HOME = "track_home"
 
 DEFAULT_HOME_LATITUDE = 52.3731339
 DEFAULT_HOME_LONGITUDE = 4.8903147
+
+SEVERITY_ORDER = {"critical": 3, "high": 2, "medium": 1, "low": 0}
+ALERT_RULES = [
+    {
+        "id": "storm_warning",
+        "conditions": {
+            "wind_speed": lambda w: w > 24.5,
+        },
+        "message": "Storm warning! High winds above 24.5 m/s detected.",
+        "severity": "high",
+    },
+    {
+        "id": "wind_gust_warning",
+        "conditions": {
+            "wind_gust": lambda w: w > 30,
+        },
+        "message": "Extreme wind gusts detected! Stay indoors.",
+        "severity": "critical",
+    },
+    {
+        "id": "heavy_rain",
+        "conditions": {
+            "precipitation": lambda p: p > 15,
+        },
+        "message": "Heavy rainfall expected. Stay safe!",
+        "severity": "medium",
+    },
+    {
+        "id": "rainstorm",
+        "conditions": {
+            "temperature": lambda t: t > 0,
+            "precipitation": lambda p: p >= 20,
+            "wind_speed": lambda w: w >= 10,
+        },
+        "message": "Rainstorm alert! Heavy rain and strong winds expected.",
+        "severity": "high",
+    },
+    {
+        "id": "flood_warning",
+        "conditions": {
+            "precipitation": lambda p: p > 30,
+            "humidity": lambda h: h > 85,
+        },
+        "message": "Flood warning! Intense rainfall and high humidity detected.",
+        "severity": "critical",
+    },
+    {
+        "id": "heavy_snow",
+        "conditions": {
+            "temperature": lambda t: t <= 0,
+            "precipitation": lambda p: p >= 5,
+        },
+        "message": "Heavy snow expected. Drive carefully!",
+        "severity": "medium",
+    },
+    {
+        "id": "uv_alert",
+        "conditions": {
+            "uv_index": lambda uv: uv >= 8,
+        },
+        "message": "High UV index! Protect your skin.",
+        "severity": "medium",
+    },
+    {
+        "id": "snowstorm_warning",
+        "conditions": {
+            "temperature": lambda t: t <= 0,
+            "precipitation": lambda p: p >= 8,
+            "wind_speed": lambda w: w >= 10,
+        },
+        "message": "Snowstorm expected. Strong winds and heavy snowfall.",
+        "severity": "high",
+    },
+]
 
 ENTITY_ID_SENSOR_FORMAT_HOME = f"{WEATHER_DOMAIN}.met_{HOME_LOCATION_NAME}"
 
@@ -196,6 +274,10 @@ FORECAST_MAP = {
 }
 
 ATTR_MAP = {
+    ATTR_WEATHER_ALERT: "alert",
+    ATTR_WEATHER_ALERT_SEVERITY: "alert_severity",
+    ATTR_WEATHER_SUNSET: "sunset",
+    ATTR_WEATHER_SUNRISE: "sunrise",
     ATTR_WEATHER_HUMIDITY: "humidity",
     ATTR_WEATHER_PRESSURE: "pressure",
     ATTR_WEATHER_TEMPERATURE: "temperature",
